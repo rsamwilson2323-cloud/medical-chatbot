@@ -35,7 +35,8 @@ This chatbot allows users to ask health-related questions and receive AI-generat
 medical-chatbot
 │
 ├── index.html      # Main chatbot interface
-└── README.md       # Project documentation
+├── README.md       # Project documentation
+└── LICENSE
 ```
 
 ---
