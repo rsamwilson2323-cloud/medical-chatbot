@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Medical Chatbot (Groq)</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background: #020617;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#chat {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.message {
+    max-width: 70%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 12px;
+    line-height: 1.4;
+}
+
+.user {
+    background: #2563eb;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.bot {
+    background: #1e293b;
+    align-self: flex-start;
+}
+
+#input-area {
+    display: flex;
+    padding: 10px;
+    background: #020617;
+}
+
+input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+}
+
+button {
+    margin-left: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #22c55e;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>🩺 Medical Chatbot </header>
+
+<div id="chat"></div>
+
+<div id="input-area">
+    <input id="userInput" placeholder="Ask a medical question..." />
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+/* ============================
+   🔑 PASTE YOUR GROQ API KEY
+   ============================ */
+const GROQ_API_KEY="PASTE_YOUR_GROQ_KEY_HERE";
+
+/* ============================
+   MODEL (WORKING)
+   ============================ */
+const MODEL = "llama-3.1-8b-instant";
+
+/* ============================ */
+
+const chatDiv = document.getElementById("chat");
+
+function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = "message " + sender;
+    div.innerText = text;
+    chatDiv.appendChild(div);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+// Bot speaks first
+addMessage(
+    "Hello 👋 I am your medical assistant. Ask me about symptoms, diseases, or treatments.",
+    "bot"
+);
+
+async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    input.value = "";
+
+    addMessage("Thinking...", "bot");
+
+    try {
+        const response = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + GROQ_API_KEY,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: [
+                        {
+                            role: "system",
+                            content:
+                                "You are a helpful medical assistant. Provide clear and safe medical information. Do not give diagnosis. Encourage consulting a doctor."
+                        },
+                        { role: "user", content: text }
+                    ],
+                    temperature: 0.3
+                })
+            }
+        );
+
+        const data = await response.json();
+        chatDiv.lastChild.remove();
+        addMessage(data.choices[0].message.content, "bot");
+
+    } catch (err) {
+        chatDiv.lastChild.remove();
+        addMessage("❌ Error connecting to Groq API", "bot");
+        console.error(err);
+    }
+}
+</script>
+
+</body>
+</html>
